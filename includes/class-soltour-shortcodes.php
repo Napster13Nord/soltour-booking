@@ -102,9 +102,9 @@ class Soltour_Shortcodes {
                                 <?php endfor; ?>
                             </select>
                         </div>
-                    </div>
 
-                    <div id="soltour-rooms-config" class="soltour-rooms-config"></div>
+                        <div id="soltour-rooms-config" class="soltour-rooms-config"></div>
+                    </div>
 
                     <div class="soltour-form-actions">
                         <button type="submit" class="soltour-btn soltour-btn-search">
