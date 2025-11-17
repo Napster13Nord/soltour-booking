@@ -248,10 +248,6 @@ h4.rooms-title {
 }
 
 .room-option {
-    background: #f9fafb !important;
-    border: 2px solid #e5e7eb !important;
-    border-radius: 10px !important;
-    padding: 14px 16px !important;
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
@@ -268,10 +264,6 @@ h4.rooms-title {
 }
 
 .room-option.selected {
-    background: transparent !important;
-    border-color: #10b981 !important;
-    border-width: 3px !important;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2) !important;
 }
 
 .room-option.selected:hover {

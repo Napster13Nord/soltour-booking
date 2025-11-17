@@ -275,6 +275,15 @@
             renderRoomsConfig(numRooms);
         });
 
+        // Toggle para configuração de quartos
+        $('#soltour-toggle-rooms-config').on('click', function() {
+            const $config = $('#soltour-rooms-config');
+            const $chevron = $(this).find('.soltour-chevron');
+
+            $config.slideToggle(300);
+            $chevron.toggleClass('rotated');
+        });
+
         $('#soltour-search-form').on('submit', function(e) {
             e.preventDefault();
             performSearch();
