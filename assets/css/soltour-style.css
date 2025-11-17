@@ -453,7 +453,9 @@
 }
 
 /* Botões do Slider */
-.slider-btn {
+.slider-btn,
+button.slider-btn,
+.package-image-slider .slider-btn {
     position: absolute !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
@@ -474,21 +476,30 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
 }
 
-.package-image-slider:hover .slider-btn {
+.package-image-slider:hover .slider-btn,
+.package-image-slider:hover button.slider-btn {
     opacity: 1 !important;
 }
 
-.slider-btn:hover {
+.slider-btn:hover,
+button.slider-btn:hover,
+.package-image-slider .slider-btn:hover {
     background: #019CB8 !important;
     color: white !important;
     transform: translateY(-50%) scale(1.1) !important;
 }
 
-.slider-prev {
+.slider-prev,
+.slider-btn.slider-prev,
+button.slider-btn.slider-prev,
+.package-image-slider .slider-prev {
     left: 10px !important;
 }
 
-.slider-next {
+.slider-next,
+.slider-btn.slider-next,
+button.slider-btn.slider-next,
+.package-image-slider .slider-next {
     right: 10px !important;
 }
 

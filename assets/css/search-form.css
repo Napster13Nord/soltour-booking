@@ -122,48 +122,6 @@
 }
 
 /* ========================================
-   TOGGLE CONFIGURAÇÃO DE QUARTOS
-   ======================================== */
-
-.soltour-toggle-rooms-btn {
-    width: 100%;
-    padding: 14px 20px;
-    background: #f9fafb;
-    border: 2px solid #e5e7eb;
-    border-radius: 12px;
-    font-size: 15px;
-    font-weight: 600;
-    color: #374151;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 20px;
-    font-family: inherit;
-}
-
-.soltour-toggle-rooms-btn:hover {
-    background: #ffffff;
-    border-color: #019CB8;
-    color: #019CB8;
-}
-
-.soltour-toggle-rooms-btn svg:first-child {
-    color: #019CB8;
-}
-
-.soltour-toggle-rooms-btn .soltour-chevron {
-    transition: transform 0.3s ease;
-    margin-left: auto;
-}
-
-.soltour-toggle-rooms-btn .soltour-chevron.rotated {
-    transform: rotate(180deg);
-}
-
-/* ========================================
    CONFIGURAÇÃO DE QUARTOS
    ======================================== */
 
