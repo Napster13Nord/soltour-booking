@@ -612,7 +612,7 @@
         $('#soltour-max-price').on('input', function() {
             const value = parseInt($(this).val());
             SoltourApp.filters.maxPrice = value;
-            $('#soltour-max-price-value').text(value.toLocaleString('pt-PT') + '€');
+            $('#soltour-max-price-value').text(formatPrice(value) + '€');
         });
 
         $('#soltour-max-price').on('change', function() {
@@ -813,7 +813,7 @@
             SoltourApp.filters.minPrice = minPrice;
             SoltourApp.filters.maxPrice = maxPrice;
             SoltourApp.filters.absoluteMaxPrice = maxPrice; // Guardar o máximo absoluto
-            $('#soltour-max-price-value').text(maxPrice.toLocaleString('pt-PT') + '€');
+            $('#soltour-max-price-value').text(formatPrice(maxPrice) + '€');
         }
     }
 
