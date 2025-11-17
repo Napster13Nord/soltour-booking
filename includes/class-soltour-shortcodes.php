@@ -104,18 +104,7 @@ class Soltour_Shortcodes {
                         </div>
                     </div>
 
-                    <button type="button" id="soltour-toggle-rooms-config" class="soltour-toggle-rooms-btn">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="12" cy="7" r="4"></circle>
-                        </svg>
-                        <?php _e('Configurar passageiros', 'soltour-booking'); ?>
-                        <svg class="soltour-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </button>
-
-                    <div id="soltour-rooms-config" class="soltour-rooms-config" style="display:none;"></div>
+                    <div id="soltour-rooms-config" class="soltour-rooms-config"></div>
 
                     <div class="soltour-form-actions">
                         <button type="submit" class="soltour-btn soltour-btn-search">
