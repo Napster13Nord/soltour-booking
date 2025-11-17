@@ -324,8 +324,8 @@
                     <div class="bt-sidebar-section bt-sidebar-price">
                         <div class="bt-price-total">
                             <div class="bt-price-total-label">Preço Total</div>
-                            <div class="bt-price-total-amount">${price.toFixed(0)}€</div>
-                            <div class="bt-price-per-person">(${pricePerPerson.toFixed(0)}€ por pessoa)</div>
+                            <div class="bt-price-total-amount">${formatPrice(price)}€</div>
+                            <div class="bt-price-per-person">(${formatPrice(pricePerPerson)}€ por pessoa)</div>
                         </div>
                         <div class="bt-price-note">
                             💡 Valor estimado. O preço final será confirmado após preencher os dados.
@@ -962,7 +962,7 @@
 
 
         // Atualizar display do preço
-        $('.bt-price-total-amount').text(newTotal.toFixed(0) + '€');
+        $('.bt-price-total-amount').text(formatPrice(newTotal) + '€');
 
         // Atualizar também no objeto global
         if (BeautyTravelQuote.packageData) {
