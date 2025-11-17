@@ -31,6 +31,15 @@
         'VLC': 'Valência'
     };
 
+    // Função para formatar preços com separador de milhar
+    function formatPrice(price, decimals = 0) {
+        const fixed = Number(price).toFixed(decimals);
+        return fixed.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+
+    // Exportar função globalmente
+    window.formatPrice = formatPrice;
+
     window.SoltourApp = {
         availToken: null,
         budgetId: null,
@@ -2065,12 +2074,12 @@
                 <div class="package-price">
                     <div class="price-per-person">
                         <span class="price-label-small">desde</span>
-                        <span class="price-amount-large">${pricePerPerson.toFixed(0)}€</span>
+                        <span class="price-amount-large">${formatPrice(pricePerPerson)}€</span>
                         <span class="price-label-small">/ pax</span>
                     </div>
                     <div class="price-total">
                         <span class="price-total-label">Preço total</span>
-                        <span class="price-total-amount">${price.toFixed(0)}€</span>
+                        <span class="price-total-amount">${formatPrice(price)}€</span>
                     </div>
                     <button class="soltour-btn soltour-btn-primary"
                             style="padding: 20px 35px !important; border-radius: 100px !important; background: #019CB8 !important; color: #fff !important; border: none !important; font-size: 16px !important; font-weight: 700 !important; width: 100% !important;"

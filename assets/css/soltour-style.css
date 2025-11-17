@@ -474,6 +474,7 @@ button.slider-btn,
     transition: all 0.3s ease !important;
     opacity: 1 !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+    padding: 0px !important;
 }
 
 .package-image-slider:hover .slider-btn,
@@ -1883,7 +1884,7 @@ button.slider-btn.slider-next,
 }
 
 .price-total-label {
-    font-size: 13px;
+    font-size: 20px !important;
     color: #4a5568;
     font-weight: 600;
 }
