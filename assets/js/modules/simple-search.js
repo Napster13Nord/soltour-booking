@@ -29,6 +29,16 @@
             return;
         }
 
+        // Desabilitar selects até carregar os dados
+        const $destSelect = $('#soltour-destination-simple');
+        const $originSelect = $('#soltour-origin-simple');
+
+        $destSelect.prop('disabled', true);
+        $originSelect.prop('disabled', true);
+
+        // Alterar texto do placeholder para indicar carregamento
+        $destSelect.find('option:first').text('Carregando destinos...');
+        $originSelect.find('option:first').text('Carregando origens...');
 
         // Carregar destinos e origens
         loadDestinations();
@@ -108,6 +118,9 @@
             return;
         }
 
+        // Restaurar texto original do placeholder
+        $select.find('option:first').text('Selecione um destino');
+
         destinations.forEach(function(dest) {
             $select.append(
                 $('<option></option>')
@@ -115,6 +128,9 @@
                     .text(dest.description || dest.name)
             );
         });
+
+        // Habilitar select após carregar os destinos
+        $select.prop('disabled', false);
 
     }
 
@@ -129,6 +145,9 @@
             return;
         }
 
+        // Restaurar texto original do placeholder
+        $select.find('option:first').text('Selecione a origem');
+
         origins.forEach(function(origin) {
             $select.append(
                 $('<option></option>')
@@ -136,6 +155,9 @@
                     .text(origin.description || origin.name)
             );
         });
+
+        // Habilitar select após carregar as origens
+        $select.prop('disabled', false);
 
     }
 
