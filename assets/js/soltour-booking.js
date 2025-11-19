@@ -291,6 +291,18 @@
     }
 
     function loadDestinations() {
+        const $select = $('#soltour-destination');
+
+        if ($select.length === 0) {
+            return;
+        }
+
+        // Estado inicial: desabilita e mostra que está carregando
+        $select
+            .prop('disabled', true)
+            .empty()
+            .append('<option value="">Carregando destinos...</option>');
+
         $.ajax({
             url: soltourData.ajaxurl,
             type: 'POST',
@@ -299,20 +311,47 @@
                 nonce: soltourData.nonce
             },
             success: function(response) {
-                if (response.success) {
-                    const $select = $('#soltour-destination');
-                    $select.empty().append('<option value="">Selecione um destino</option>');
+                $select.empty(); // limpa sempre
+
+                if (response.success && Array.isArray(response.data) && response.data.length > 0) {
+                    // Placeholder normal depois de carregar
+                    $select.append('<option value="">Selecione um destino</option>');
+
                     response.data.forEach(function(dest) {
-                        $select.append(`<option value="${dest.code}">${dest.displayName}</option>`);
+                        $select.append(
+                            `<option value="${dest.code}">${dest.displayName}</option>`
+                        );
                     });
+                } else {
+                    // Caso não volte nada da API
+                    $select.append('<option value="">Nenhum destino disponível no momento</option>');
                 }
+
+                $select.prop('disabled', false);
+            },
+            error: function() {
+                // Mensagem de erro se o AJAX falhar
+                $select
+                    .empty()
+                    .append('<option value="">Erro ao carregar destinos</option>')
+                    .prop('disabled', false);
             }
         });
     }
 
     function loadOrigins(destinationCode) {
-        $('#soltour-origin').html('<option value="">A carregar...</option>');
-        
+        const $select = $('#soltour-origin');
+
+        if ($select.length === 0) {
+            return;
+        }
+
+        // Estado de carregamento: desabilita e mostra mensagem
+        $select
+            .prop('disabled', true)
+            .empty()
+            .append('<option value="">Carregando origens...</option>');
+
         $.ajax({
             url: soltourData.ajaxurl,
             type: 'POST',
@@ -322,13 +361,30 @@
                 destination_code: destinationCode
             },
             success: function(response) {
-                const $select = $('#soltour-origin');
-                $select.empty().append('<option value="">Selecione a origem</option>');
-                if (response.success) {
+                $select.empty(); // limpa sempre
+
+                if (response.success && Array.isArray(response.data) && response.data.length > 0) {
+                    // Placeholder normal depois de carregar
+                    $select.append('<option value="">Selecione a origem</option>');
+
                     response.data.forEach(function(origin) {
-                        $select.append(`<option value="${origin.code}">${origin.description}</option>`);
+                        $select.append(
+                            `<option value="${origin.code}">${origin.description}</option>`
+                        );
                     });
+                } else {
+                    // Caso não volte nada da API
+                    $select.append('<option value="">Nenhuma origem disponível</option>');
                 }
+
+                $select.prop('disabled', false);
+            },
+            error: function() {
+                // Mensagem de erro se o AJAX falhar
+                $select
+                    .empty()
+                    .append('<option value="">Erro ao carregar origens</option>')
+                    .prop('disabled', false);
             }
         });
     }
