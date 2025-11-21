@@ -67,8 +67,12 @@
 }
 
 @media (max-width: 768px) {
+    .bt-package-details-page {
+        padding: 0 !important;
+    }
+
     .package-details-left .package-image-slider {
-        height: 300px !important;
+        height: 200px !important;
     }
 }
 
