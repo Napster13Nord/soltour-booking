@@ -292,6 +292,7 @@
 
     /**
      * Configura o botão de pedir cotação
+     * Usa o mesmo fluxo do botão "Selecionar" dos resultados
      */
     function setupQuoteButton(packageData) {
         console.log('🔧 [DETAILS] Configurando botão de cotação...');
@@ -299,55 +300,80 @@
         $('#btn-request-quote').on('click', function() {
             console.log('🎯 [DETAILS] Botão "Pedir cotação" clicado');
 
-            // Preparar dados COMPLETOS
-            const quoteData = {
-                budgetId: packageData.budgetId,
-                hotelCode: packageData.hotelCode,
-                providerCode: packageData.providerCode,
-                availToken: packageData.availToken,
-                budget: packageData.budget,
-                hotelInfo: packageData.hotelInfo,
-                flightData: packageData.flightData,
-                selectedRooms: packageData.selectedRooms || [],
-                selectedRoom: packageData.selectedRoom || null,
-                numRoomsSearched: packageData.numRoomsSearched || 1,
-                searchParams: packageData.searchParams || {}
-            };
+            // Antes de chamar selectPackage, precisamos garantir que os dados estão em SoltourApp
+            // para que o fluxo de validação funcione corretamente
 
-            console.log('💾 [DETAILS] Salvando dados:', quoteData);
-
-            // Salvar dados
-            sessionStorage.setItem('soltour_selected_package', JSON.stringify(quoteData));
-
-            // Preparar dados completos para o fluxo de cotação
-            const hotelsArray = [{
-                budget: packageData.budget,
-                hotelCode: packageData.hotelCode,
-                providerCode: packageData.providerCode,
-                details: {}
-            }];
-
-            const resultsData = {
-                availToken: packageData.availToken,
-                allUniqueHotels: hotelsArray,
-                hotelsFromAvailability: {},
-                flightsFromAvailability: {},
-                searchParams: packageData.searchParams,
-                numRoomsSearched: packageData.numRoomsSearched || 1
-            };
-
-            resultsData.hotelsFromAvailability[packageData.hotelCode] = packageData.hotelInfo;
-
-            if (packageData.flightData) {
-                resultsData.flightsFromAvailability[packageData.flightData.id || '100'] = packageData.flightData;
+            // Verificar se SoltourApp existe e tem os dados necessários
+            if (typeof window.SoltourApp === 'undefined') {
+                window.SoltourApp = {};
             }
 
-            sessionStorage.setItem('soltour_search_results', JSON.stringify(resultsData));
+            // Adicionar dados essenciais ao SoltourApp se não existirem
+            if (!window.SoltourApp.allUniqueHotels) {
+                window.SoltourApp.allUniqueHotels = [];
+            }
 
-            console.log('✅ [DETAILS] Redirecionando para cotação...');
+            if (!window.SoltourApp.hotelsFromAvailability) {
+                window.SoltourApp.hotelsFromAvailability = {};
+            }
 
-            // Redirecionar
-            window.location.href = '/cotacao/?budget=' + encodeURIComponent(packageData.budgetId);
+            if (!window.SoltourApp.flightsFromAvailability) {
+                window.SoltourApp.flightsFromAvailability = {};
+            }
+
+            if (!window.SoltourApp.selectedRooms) {
+                window.SoltourApp.selectedRooms = {};
+            }
+
+            // Adicionar o pacote atual ao array de hotéis
+            const packageExists = window.SoltourApp.allUniqueHotels.find(pkg =>
+                pkg.budget && pkg.budget.budgetId === packageData.budgetId
+            );
+
+            if (!packageExists) {
+                window.SoltourApp.allUniqueHotels.push({
+                    budget: packageData.budget,
+                    hotelCode: packageData.hotelCode,
+                    providerCode: packageData.providerCode
+                });
+            }
+
+            // Adicionar informações do hotel
+            window.SoltourApp.hotelsFromAvailability[packageData.hotelCode] = packageData.hotelInfo;
+
+            // Adicionar informações do voo
+            if (packageData.flightData) {
+                const flightId = packageData.flightData.id || '100';
+                window.SoltourApp.flightsFromAvailability[flightId] = packageData.flightData;
+            }
+
+            // Adicionar quartos selecionados
+            window.SoltourApp.selectedRooms[packageData.budgetId] = packageData.selectedRooms || [];
+
+            // Adicionar availToken e searchParams
+            window.SoltourApp.availToken = packageData.availToken;
+            window.SoltourApp.searchParams = packageData.searchParams;
+            window.SoltourApp.numRoomsSearched = packageData.numRoomsSearched || 1;
+
+            console.log('✅ [DETAILS] Dados preparados, chamando SoltourApp.selectPackage()');
+
+            // Agora chamar a função global que faz o fluxo completo:
+            // 1. Mostra modal "Verificando disponibilidade"
+            // 2. Chama soltour_check_allowed_selling
+            // 3. Mostra modal "Validando pacote"
+            // 4. Chama soltour_prepare_quote
+            // 5. Salva dados completos com quoteToken
+            // 6. Redireciona para página de cotação
+            if (typeof window.SoltourApp.selectPackage === 'function') {
+                window.SoltourApp.selectPackage(
+                    packageData.budgetId,
+                    packageData.hotelCode,
+                    packageData.providerCode
+                );
+            } else {
+                console.error('❌ [DETAILS] SoltourApp.selectPackage não está disponível');
+                alert('Erro ao processar cotação. Por favor, volte aos resultados e tente novamente.');
+            }
         });
     }
 
