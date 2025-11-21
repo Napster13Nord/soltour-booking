@@ -145,18 +145,18 @@
         let sliderHTML = '';
         if (hotelImages.length > 0) {
             sliderHTML = `
-                <div class="package-image-slider">
+                <div class="package-image-slider" style="cursor: pointer;" onclick="openLightbox(0)">
                     <div class="slider-images">
                         ${hotelImages.map((img, index) => `
                             <img src="${img}" alt="${hotelName}" class="slider-image ${index === 0 ? 'active' : ''}" />
                         `).join('')}
                     </div>
                     ${hotelImages.length > 1 ? `
-                        <button class="slider-btn slider-prev" onclick="SoltourApp.changeSlide(this, -1)">❮</button>
-                        <button class="slider-btn slider-next" onclick="SoltourApp.changeSlide(this, 1)">❯</button>
+                        <button class="slider-btn slider-prev" onclick="event.stopPropagation(); SoltourApp.changeSlide(this, -1)">❮</button>
+                        <button class="slider-btn slider-next" onclick="event.stopPropagation(); SoltourApp.changeSlide(this, 1)">❯</button>
                         <div class="slider-dots">
                             ${hotelImages.map((_, index) => `
-                                <span class="slider-dot ${index === 0 ? 'active' : ''}" onclick="SoltourApp.goToSlide(this, ${index})"></span>
+                                <span class="slider-dot ${index === 0 ? 'active' : ''}" onclick="event.stopPropagation(); SoltourApp.goToSlide(this, ${index})"></span>
                             `).join('')}
                         </div>
                     ` : ''}
@@ -170,6 +170,21 @@
             `;
         }
 
+        // Guardar imagens globalmente para o lightbox
+        window.hotelImagesForLightbox = hotelImages;
+
+        // BOTÃO MAPA (se tiver coordenadas)
+        const latitude = hotelInfo.latitude;
+        const longitude = hotelInfo.longitude;
+        let mapButtonHTML = '';
+        if (latitude && longitude) {
+            mapButtonHTML = `
+                <button class="map-button" onclick="openMapModal(${latitude}, ${longitude}, '${hotelName.replace(/'/g, "\\'")}')">
+                    <span class="map-icon">📍</span> Ver no Mapa
+                </button>
+            `;
+        }
+
         // RENDERIZAR LAYOUT (2 colunas: carrossel esquerda + info direita)
         $container.html(`
             <button class="bt-back-button" onclick="window.history.back()" style="margin-bottom: 20px;">
@@ -180,6 +195,7 @@
                 <!-- ESQUERDA: Carrossel -->
                 <div class="package-details-left">
                     ${sliderHTML}
+                    ${mapButtonHTML}
                 </div>
 
                 <!-- DIREITA: Informações -->
@@ -273,6 +289,24 @@
                             Pedir cotação deste pacote
                         </button>
                     </div>
+                </div>
+            </div>
+
+            <!-- Lightbox Fullscreen -->
+            <div id="image-lightbox" class="image-lightbox">
+                <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+                <button class="lightbox-prev" onclick="lightboxChangeSlide(-1)">❮</button>
+                <button class="lightbox-next" onclick="lightboxChangeSlide(1)">❯</button>
+                <img id="lightbox-img" class="lightbox-content" src="" alt="Hotel Image">
+                <div class="lightbox-counter"><span id="lightbox-current">1</span> / <span id="lightbox-total">1</span></div>
+            </div>
+
+            <!-- Modal Mapa -->
+            <div id="map-modal" class="map-modal">
+                <div class="map-modal-content">
+                    <button class="map-modal-close" onclick="closeMapModal()">&times;</button>
+                    <h3 id="map-modal-title"></h3>
+                    <div id="map-container" class="map-container"></div>
                 </div>
             </div>
         `);
@@ -372,6 +406,104 @@
         const fixed = Number(price).toFixed(decimals);
         return fixed.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     }
+
+    /**
+     * Funções do Lightbox
+     */
+    let currentLightboxIndex = 0;
+
+    window.openLightbox = function(index) {
+        const lightbox = document.getElementById('image-lightbox');
+        const img = document.getElementById('lightbox-img');
+        const images = window.hotelImagesForLightbox || [];
+
+        if (images.length === 0) return;
+
+        currentLightboxIndex = index;
+        img.src = images[currentLightboxIndex];
+
+        document.getElementById('lightbox-current').textContent = currentLightboxIndex + 1;
+        document.getElementById('lightbox-total').textContent = images.length;
+
+        lightbox.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    };
+
+    window.closeLightbox = function() {
+        const lightbox = document.getElementById('image-lightbox');
+        lightbox.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    };
+
+    window.lightboxChangeSlide = function(direction) {
+        const images = window.hotelImagesForLightbox || [];
+        if (images.length === 0) return;
+
+        currentLightboxIndex += direction;
+
+        if (currentLightboxIndex < 0) {
+            currentLightboxIndex = images.length - 1;
+        } else if (currentLightboxIndex >= images.length) {
+            currentLightboxIndex = 0;
+        }
+
+        const img = document.getElementById('lightbox-img');
+        img.style.opacity = '0';
+
+        setTimeout(() => {
+            img.src = images[currentLightboxIndex];
+            img.style.opacity = '1';
+            document.getElementById('lightbox-current').textContent = currentLightboxIndex + 1;
+        }, 150);
+    };
+
+    // Fechar lightbox com ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            window.closeLightbox();
+            window.closeMapModal();
+        }
+        if (e.key === 'ArrowLeft') {
+            window.lightboxChangeSlide(-1);
+        }
+        if (e.key === 'ArrowRight') {
+            window.lightboxChangeSlide(1);
+        }
+    });
+
+    /**
+     * Funções do Modal de Mapa
+     */
+    window.openMapModal = function(lat, lng, hotelName) {
+        const modal = document.getElementById('map-modal');
+        const title = document.getElementById('map-modal-title');
+        const container = document.getElementById('map-container');
+
+        title.textContent = hotelName;
+
+        // Limpar container
+        container.innerHTML = '';
+
+        // Criar iframe com Google Maps
+        const iframe = document.createElement('iframe');
+        iframe.width = '100%';
+        iframe.height = '100%';
+        iframe.frameBorder = '0';
+        iframe.style.border = '0';
+        iframe.src = `https://www.google.com/maps?q=${lat},${lng}&output=embed&z=15`;
+        iframe.allowFullscreen = true;
+
+        container.appendChild(iframe);
+
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    };
+
+    window.closeMapModal = function() {
+        const modal = document.getElementById('map-modal');
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    };
 
     // Inicializar quando o DOM estiver pronto
     $(document).ready(function() {

@@ -2031,18 +2031,18 @@
         let sliderHTML = '';
         if (hotelImages.length > 0) {
             sliderHTML = `
-                <div class="package-image-slider">
+                <div class="package-image-slider" style="cursor: pointer;" onclick="SoltourApp.openPackageDetails('${budget.budgetId}', '${hotelCode}', '${hotelService.providerCode || 'UNDEFINED'}')">
                     <div class="slider-images">
                         ${hotelImages.map((img, index) => `
                             <img src="${img}" alt="${hotelName}" class="slider-image ${index === 0 ? 'active' : ''}" />
                         `).join('')}
                     </div>
                     ${hotelImages.length > 1 ? `
-                        <button class="slider-btn slider-prev" onclick="SoltourApp.changeSlide(this, -1)">❮</button>
-                        <button class="slider-btn slider-next" onclick="SoltourApp.changeSlide(this, 1)">❯</button>
+                        <button class="slider-btn slider-prev" onclick="event.stopPropagation(); SoltourApp.changeSlide(this, -1)">❮</button>
+                        <button class="slider-btn slider-next" onclick="event.stopPropagation(); SoltourApp.changeSlide(this, 1)">❯</button>
                         <div class="slider-dots">
                             ${hotelImages.map((_, index) => `
-                                <span class="slider-dot ${index === 0 ? 'active' : ''}" onclick="SoltourApp.goToSlide(this, ${index})"></span>
+                                <span class="slider-dot ${index === 0 ? 'active' : ''}" onclick="event.stopPropagation(); SoltourApp.goToSlide(this, ${index})"></span>
                             `).join('')}
                         </div>
                     ` : ''}
@@ -2051,7 +2051,7 @@
             `;
         } else {
             sliderHTML = `
-                <div class="package-image">
+                <div class="package-image" style="cursor: pointer;" onclick="SoltourApp.openPackageDetails('${budget.budgetId}', '${hotelCode}', '${hotelService.providerCode || 'UNDEFINED'}')">
                     <div class="no-image">📷 Sem imagem</div>
                     <div class="package-badge">${productType}</div>
                 </div>
