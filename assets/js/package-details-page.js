@@ -96,8 +96,8 @@
 
         // EXTRAIR IMAGENS (mesma lógica dos resultados)
         let hotelImages = [];
-        if (hotelInfo && hotelInfo.images) {
-            hotelImages = hotelInfo.images.map(img => img.url).slice(0, 10);
+        if (hotelInfo && hotelInfo.multimedias) {
+            hotelImages = hotelInfo.multimedias.map(img => img.url).slice(0, 10);
         }
 
         console.log('📸 [DETAILS] Imagens encontradas:', hotelImages.length);
@@ -142,7 +142,7 @@
             (hotelService.mealPlan.description || hotelService.mealPlan.code || '') : '';
 
         // Preços
-        const price = budget.price || budget.totalPrice || 0;
+        const price = budget.priceBreakdown?.priceBreakdownDetails?.[0]?.priceInfo?.pvp || 0;
         const numPax = budget.numPax || 2;
         const pricePerPerson = numPax > 0 ? (price / numPax) : price;
 
