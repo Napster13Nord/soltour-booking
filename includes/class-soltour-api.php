@@ -499,19 +499,33 @@ class Soltour_API {
             'sslverify' => true
         );
 
-        $this->log("Request to {$endpoint}: " . json_encode($data));
+        // DEBUG AVANÇADO - LOG COMPLETO DA REQUISIÇÃO
+        $this->log("═══════════════════════════════════════════════════");
+        $this->log("📤 REQUEST to: {$endpoint}");
+        $this->log("📍 URL: {$url}");
+        $this->log("🔑 Headers: " . json_encode($headers, JSON_PRETTY_PRINT));
+        $this->log("📦 Body: " . json_encode($data, JSON_PRETTY_PRINT));
+        $this->log("═══════════════════════════════════════════════════");
 
         $response = wp_remote_post($url, $args);
 
         if (is_wp_error($response)) {
-            $this->log("Error in {$endpoint}: " . $response->get_error_message(), 'error');
-            return array('error' => $response->get_error_message());
+            $error_msg = $response->get_error_message();
+            $this->log("❌ ERROR in {$endpoint}: {$error_msg}", 'error');
+            $this->log("═══════════════════════════════════════════════════");
+            return array('error' => $error_msg);
         }
 
+        $http_code = wp_remote_retrieve_response_code($response);
         $body = wp_remote_retrieve_body($response);
         $decoded = json_decode($body, true);
 
-        $this->log("Response from {$endpoint}: " . substr($body, 0, 500));
+        // DEBUG AVANÇADO - LOG COMPLETO DA RESPOSTA
+        $this->log("📥 RESPONSE from: {$endpoint}");
+        $this->log("📊 HTTP Code: {$http_code}");
+        $this->log("📄 Body (full): " . $body);
+        $this->log("🔍 Decoded: " . json_encode($decoded, JSON_PRETTY_PRINT));
+        $this->log("═══════════════════════════════════════════════════");
 
         return $decoded;
     }
