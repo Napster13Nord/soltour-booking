@@ -218,10 +218,10 @@
 .info-grid {
     display: grid !important;
     grid-template-columns: repeat(2, 1fr) !important;
-    gap: 20px !important;
+    gap: 18px !important;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 968px) {
     .info-grid {
         grid-template-columns: 1fr !important;
         gap: 15px !important;
