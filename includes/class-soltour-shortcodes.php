@@ -269,6 +269,29 @@ class Soltour_Shortcodes {
     }
 
     /**
+     * Shortcode: [soltour_package_details]
+     * Página de detalhes do pacote/hotel
+     */
+    public function package_details_page($atts) {
+        $atts = shortcode_atts(array(
+            'title' => __('Detalhes do Pacote', 'soltour-booking')
+        ), $atts);
+
+        ob_start();
+        ?>
+        <div class="bt-package-details-page" id="soltour-package-details-page">
+            <!-- Conteúdo será carregado via JavaScript (package-details-page.js) -->
+            <div class="bt-quote-loading">
+                <div class="spinner"></div>
+                <h3><?php _e('Carregando detalhes do hotel...', 'soltour-booking'); ?></h3>
+                <p><?php _e('Aguarde enquanto buscamos todas as informações do seu pacote.', 'soltour-booking'); ?></p>
+            </div>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+
+    /**
      * Shortcode: [soltour_checkout]
      * Página de checkout
      */
