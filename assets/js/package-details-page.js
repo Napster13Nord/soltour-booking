@@ -1,10 +1,36 @@
 /**
  * Página de Detalhes do Pacote - BeautyTravel
  * Renderiza detalhes completos do hotel/pacote
+ * USANDO O MESMO LAYOUT DA PÁGINA DE RESULTADOS
  */
 
 (function($) {
     'use strict';
+
+    // MAPEAMENTOS (mesmos do soltour-booking.js)
+    const DESTINATIONS_MAP = {
+        'PUJ': { country: 'República Dominicana', city: 'Punta Cana' },
+        'SDQ': { country: 'República Dominicana', city: 'Santo Domingo' },
+        'STI': { country: 'República Dominicana', city: 'Santiago' },
+        'LRM': { country: 'República Dominicana', city: 'La Romana' },
+        'AUA': { country: 'Aruba', city: 'Oranjestad' },
+        'CUN': { country: 'México', city: 'Cancún' },
+        'CZM': { country: 'México', city: 'Cozumel' },
+        'VRA': { country: 'Cuba', city: 'Varadero' },
+        'HAV': { country: 'Cuba', city: 'Havana' },
+        'MBJ': { country: 'Jamaica', city: 'Montego Bay' }
+    };
+
+    const ORIGINS_MAP = {
+        'LIS': 'Lisboa',
+        'OPO': 'Porto',
+        'FAO': 'Faro',
+        'MAD': 'Madrid',
+        'BCN': 'Barcelona',
+        'SVQ': 'Sevilha',
+        'BIO': 'Bilbau',
+        'VLC': 'Valência'
+    };
 
     /**
      * Inicializa a página de detalhes
@@ -13,228 +39,281 @@
         const $container = $('#soltour-package-details-page');
         if ($container.length === 0) return;
 
-        // 1. Buscar dados base do sessionStorage
+        console.log('🔍 [DETAILS] Inicializando página de detalhes...');
+
+        // Buscar dados do sessionStorage
         const stored = sessionStorage.getItem('soltour_selected_package_details');
 
         if (!stored) {
-            // Tentar pegar budgetId da URL como fallback
-            const urlParams = new URLSearchParams(window.location.search);
-            const budgetId = urlParams.get('budget');
-
-            if (budgetId) {
-                // Tentar recuperar da lista de pacotes
-                const resultsData = sessionStorage.getItem('soltour_search_results');
-                if (resultsData) {
-                    try {
-                        const data = JSON.parse(resultsData);
-                        const packageData = findPackageInResults(data, budgetId);
-
-                        if (packageData) {
-                            renderPackageDetails($container, packageData);
-                            return;
-                        }
-                    } catch (e) {
-                        console.error('Erro ao recuperar dados dos resultados:', e);
-                    }
-                }
-            }
-
-            // Se chegou aqui, não há dados disponíveis
-            $container.html(`
-                <div class="bt-quote-error">
-                    <h3>Pacote não encontrado</h3>
-                    <p>Por favor, volte à página de resultados e selecione um pacote novamente.</p>
-                    <button class="bt-back-button" onclick="window.history.back()">
-                        ← Voltar aos resultados
-                    </button>
-                </div>
-            `);
+            console.error('❌ [DETAILS] Dados não encontrados no sessionStorage');
+            showError($container, 'Pacote não encontrado', 'Por favor, volte à página de resultados e selecione um pacote novamente.');
             return;
         }
 
-        // 2. Parse dos dados
         let packageData;
         try {
             packageData = JSON.parse(stored);
+            console.log('✅ [DETAILS] Dados carregados do sessionStorage:', packageData);
         } catch (e) {
-            $container.html(`
-                <div class="bt-quote-error">
-                    <h3>Erro ao carregar os dados</h3>
-                    <p>Os dados do pacote estão corrompidos. Volte aos resultados e tente novamente.</p>
-                    <button class="bt-back-button" onclick="window.history.back()">
-                        ← Voltar aos resultados
-                    </button>
-                </div>
-            `);
+            console.error('❌ [DETAILS] Erro ao fazer parse dos dados:', e);
+            showError($container, 'Erro ao carregar os dados', 'Os dados do pacote estão corrompidos. Volte aos resultados e tente novamente.');
             return;
         }
 
-        // 3. Renderizar página
+        // Validar dados essenciais
+        if (!packageData.budget || !packageData.hotelInfo) {
+            console.error('❌ [DETAILS] Dados incompletos:', packageData);
+            showError($container, 'Dados incompletos', 'Por favor, volte aos resultados e selecione o pacote novamente.');
+            return;
+        }
+
+        // Renderizar página
         renderPackageDetails($container, packageData);
     }
 
     /**
-     * Tenta encontrar um pacote nos resultados salvos
+     * Mostra mensagem de erro
      */
-    function findPackageInResults(resultsData, budgetId) {
-        if (!resultsData || !resultsData.allUniqueHotels) return null;
-
-        const packageFound = resultsData.allUniqueHotels.find(pkg =>
-            pkg.budget && pkg.budget.budgetId === budgetId
-        );
-
-        if (!packageFound) return null;
-
-        // Montar objeto no formato esperado
-        return {
-            budgetId: budgetId,
-            hotelCode: packageFound.hotelCode || '',
-            providerCode: packageFound.providerCode || '',
-            availToken: resultsData.availToken || '',
-            budget: packageFound.budget || {},
-            hotelInfo: resultsData.hotelsFromAvailability ?
-                resultsData.hotelsFromAvailability[packageFound.hotelCode] : null,
-            flightData: resultsData.flightsFromAvailability ?
-                Object.values(resultsData.flightsFromAvailability)[0] : null,
-            selectedRooms: [],
-            selectedRoom: null,
-            numRoomsSearched: resultsData.numRoomsSearched || 1,
-            searchParams: resultsData.searchParams || {}
-        };
-    }
-
-    /**
-     * Renderiza os detalhes do pacote
-     */
-    function renderPackageDetails($container, packageData) {
-        // 1. Renderizar layout base com dados do availability
-        renderBaseLayout($container, packageData);
-
-        // 2. Chamar AJAX para /booking/details
-        fetchPackageDetails($container, packageData);
-    }
-
-    /**
-     * Renderiza o layout base com informações já disponíveis
-     */
-    function renderBaseLayout($container, packageData) {
-        const budget = packageData.budget || {};
-        const hotelInfo = packageData.hotelInfo || {};
-        const flightData = packageData.flightData || null;
-        const searchParams = packageData.searchParams || {};
-
-        const hotelName = hotelInfo.name || budget.hotelName || 'Hotel';
-        const hotelStars = hotelInfo.category || hotelInfo.stars || 0;
-        const mealPlan = budget.mealPlan || '';
-        const numNights = budget.numNights || searchParams.numNights || '';
-
-        // Imagem principal (primeira do slider)
-        let heroImage = '';
-        if (hotelInfo.images && hotelInfo.images.length > 0) {
-            heroImage = hotelInfo.images[0].url || '';
-        }
-
-        const starsHTML = hotelStars > 0
-            ? '<span class="bt-stars">' + '⭐'.repeat(hotelStars) + '</span>'
-            : '';
-
-        // Preço formatado
-        const totalPrice = budget.price || budget.totalPrice || 0;
-        const formattedPrice = window.formatPrice ? window.formatPrice(totalPrice, 0) : totalPrice.toFixed(0);
-
-        // Datas da viagem
-        const startDate = searchParams.startDate || budget.startDate || '';
-        const endDate = searchParams.endDate || budget.endDate || '';
-        const datesText = startDate && endDate ?
-            `${formatDate(startDate)} - ${formatDate(endDate)}` :
-            (numNights ? numNights + ' noites' : '');
-
+    function showError($container, title, message) {
         $container.html(`
-            <!-- Botão Voltar -->
-            <button class="bt-back-button" onclick="window.history.back()">
-                ← Voltar aos resultados
-            </button>
-
-            <div class="bt-package-details-header">
-                <div class="bt-package-hero">
-                    ${heroImage ? `<img src="${heroImage}" alt="${hotelName}" />` : ''}
-                    <div class="bt-package-hero-overlay"></div>
-                    <div class="bt-package-hero-info">
-                        <h1>${hotelName} ${starsHTML}</h1>
-                        ${datesText ? `<p>${datesText}${mealPlan ? ' · ' + mealPlan : ''}</p>` : ''}
-                    </div>
-                </div>
-            </div>
-
-            <div class="bt-package-details-content">
-                <div class="bt-package-main">
-                    <section class="bt-section bt-hotel-description">
-                        <h2>Sobre o hotel</h2>
-                        <div class="bt-hotel-description-body">
-                            <p style="color: #999;">Carregando descrição completa do hotel...</p>
-                        </div>
-                    </section>
-
-                    <section class="bt-section bt-hotel-services">
-                        <h2>Serviços & Comodidades</h2>
-                        <div class="bt-hotel-services-body">
-                            <p style="color: #999;">Carregando serviços do hotel...</p>
-                        </div>
-                    </section>
-
-                    <section class="bt-section bt-hotel-location">
-                        <h2>Localização</h2>
-                        <div class="bt-hotel-location-body">
-                            <p style="color: #999;">Carregando localização...</p>
-                        </div>
-                    </section>
-                </div>
-
-                <aside class="bt-package-sidebar">
-                    <div class="bt-price-card">
-                        <h3>Resumo do pacote</h3>
-                        <p><strong>${formattedPrice}€</strong> / Total</p>
-                        ${datesText ? `<p style="margin-bottom: 20px;">${datesText}</p>` : ''}
-                        <button class="soltour-btn soltour-btn-primary bt-go-to-quote">
-                            Pedir cotação deste pacote
-                        </button>
-                    </div>
-                </aside>
+            <div class="bt-quote-error">
+                <h3>${title}</h3>
+                <p>${message}</p>
+                <button class="bt-back-button" onclick="window.history.back()">
+                    ← Voltar aos resultados
+                </button>
             </div>
         `);
+    }
 
-        // Adicionar evento ao botão de cotação
-        $container.find('.bt-go-to-quote').on('click', function() {
-            // Redirecionar para cotação usando o mesmo fluxo existente
-            // Guardar dados necessários no sessionStorage
-            const quoteData = {
-                budgetId: packageData.budgetId,
-                hotelCode: packageData.hotelCode,
-                providerCode: packageData.providerCode,
-                availToken: packageData.availToken,
-                budget: packageData.budget,
-                hotelInfo: packageData.hotelInfo,
-                flightData: packageData.flightData,
-                selectedRooms: packageData.selectedRooms,
-                numRoomsSearched: packageData.numRoomsSearched,
-                searchParams: packageData.searchParams
-            };
+    /**
+     * Renderiza os detalhes do pacote usando o MESMO layout dos resultados
+     */
+    function renderPackageDetails($container, packageData) {
+        console.log('🎨 [DETAILS] Renderizando página de detalhes...');
 
-            sessionStorage.setItem('soltour_selected_package', JSON.stringify(quoteData));
+        const budget = packageData.budget;
+        const hotelInfo = packageData.hotelInfo;
+        const flightData = packageData.flightData;
+        const searchParams = packageData.searchParams || {};
 
-            // Redirecionar para página de cotação
-            window.location.href = '/cotacao/?budget=' + encodeURIComponent(packageData.budgetId);
+        // Criar objeto no mesmo formato do renderCompleteCard
+        const pkg = {
+            budget: budget,
+            details: {},
+            hotelCode: packageData.hotelCode
+        };
+
+        // Renderizar layout base
+        $container.html(`
+            <button class="bt-back-button" onclick="window.history.back()" style="margin-bottom: 20px;">
+                ← Voltar aos resultados
+            </button>
+            <div id="package-details-card-container"></div>
+        `);
+
+        // Renderizar card usando a MESMA lógica da página de resultados
+        const cardHTML = generatePackageCardHTML(pkg, hotelInfo, flightData, searchParams, packageData);
+        $('#package-details-card-container').html(cardHTML);
+
+        // Inicializar slider
+        initializeImageSlider();
+
+        // Buscar detalhes adicionais do hotel via AJAX
+        fetchAndEnrichHotelDetails($container, packageData);
+    }
+
+    /**
+     * Gera HTML do card (MESMA lógica do renderCompleteCard)
+     */
+    function generatePackageCardHTML(pkg, hotelInfo, flightData, searchParams, packageData) {
+        const budget = pkg.budget;
+        const hotelService = budget.hotelServices && budget.hotelServices[0];
+
+        // IMAGENS
+        let hotelImages = [];
+        if (hotelInfo && hotelInfo.images) {
+            hotelImages = hotelInfo.images.map(img => img.url).slice(0, 10);
+        }
+
+        // PAÍS e CIDADE
+        let country = '';
+        let city = '';
+        const destinationCode = hotelInfo.destinationCode || '';
+        const destInfo = DESTINATIONS_MAP[destinationCode];
+        if (destInfo) {
+            country = destInfo.country;
+            city = hotelInfo.destinationDescription || destInfo.city;
+        }
+
+        // NOME DO HOTEL
+        const hotelName = hotelInfo.name || budget.hotelName || 'Hotel';
+        const hotelCode = hotelInfo.code || packageData.hotelCode || 'N/A';
+
+        // ESTRELAS
+        let hotelStars = 0;
+        if (hotelInfo.categoryCode) {
+            hotelStars = (hotelInfo.categoryCode.match(/\*/g) || []).length;
+        }
+
+        // ORIGEM
+        const originCity = ORIGINS_MAP[searchParams.origin_code] || searchParams.origin_code || '';
+
+        // NOITES
+        let numNights = searchParams.num_nights || 7;
+        if (hotelService && hotelService.startDate && hotelService.endDate) {
+            const start = new Date(hotelService.startDate);
+            const end = new Date(hotelService.endDate);
+            numNights = Math.round((end - start) / (1000 * 60 * 60 * 24));
+        }
+
+        // REGIME
+        const mealPlan = hotelService && hotelService.mealPlan ?
+            (hotelService.mealPlan.description || hotelService.mealPlan.code || '') : '';
+
+        // JANELA DE TEMPORADA
+        let seasonWindow = '';
+        if (hotelService && hotelService.startDate && hotelService.endDate) {
+            const startDate = new Date(hotelService.startDate);
+            const endDate = new Date(hotelService.endDate);
+            const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+            seasonWindow = `${months[startDate.getMonth()]} ${startDate.getDate()} - ${months[endDate.getMonth()]} ${endDate.getDate()}`;
+        }
+
+        // PREÇO
+        const price = budget.price || budget.totalPrice || 0;
+        const numPax = budget.numPax || 2;
+        const pricePerPerson = numPax > 0 ? (price / numPax) : price;
+
+        // SLIDER DE IMAGENS
+        let sliderHTML = '';
+        if (hotelImages.length > 0) {
+            sliderHTML = `
+                <div class="package-slider">
+                    <div class="slider-images">
+                        ${hotelImages.map((img, idx) => `
+                            <div class="slider-image ${idx === 0 ? 'active' : ''}" style="background-image: url('${img}')"></div>
+                        `).join('')}
+                    </div>
+                    ${hotelImages.length > 1 ? `
+                        <button class="slider-btn slider-prev">‹</button>
+                        <button class="slider-btn slider-next">›</button>
+                        <div class="slider-dots">
+                            ${hotelImages.map((_, idx) => `
+                                <span class="slider-dot ${idx === 0 ? 'active' : ''}" data-index="${idx}"></span>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // CARD HTML (MESMA ESTRUTURA DOS RESULTADOS)
+        return `
+            <div class="soltour-package-card" data-budget-id="${budget.budgetId}">
+                ${sliderHTML}
+
+                <div class="package-info">
+                    <div class="package-header">
+                        <div>
+                            <span class="package-destination">${city}, ${country}</span>
+                            <h3 class="package-name">${hotelName}</h3>
+                            <div class="package-rating">
+                                ${'⭐'.repeat(hotelStars)}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="package-details-grid">
+                        <div class="detail-item">
+                            <span class="detail-icon">🛫</span>
+                            <span class="detail-text">Saída: ${originCity || 'Lisboa'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">🌙</span>
+                            <span class="detail-text">${numNights} noites</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">🍽️</span>
+                            <span class="detail-text">${mealPlan || 'Regime alimentar'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">📅</span>
+                            <span class="detail-text">${seasonWindow || 'Datas da viagem'}</span>
+                        </div>
+                    </div>
+
+                    <div class="package-room-info" id="details-extra-info">
+                        <p style="color: #666; font-size: 14px; margin: 0;">
+                            Carregando informações adicionais do hotel...
+                        </p>
+                    </div>
+                </div>
+
+                <div class="package-price">
+                    <div class="price-per-person">
+                        <span class="price-label-small">desde</span>
+                        <span class="price-amount-large">${formatPrice(pricePerPerson)}€</span>
+                        <span class="price-label-small">/ pax</span>
+                    </div>
+                    <div class="price-total">
+                        <span class="price-total-label">Preço total</span>
+                        <span class="price-total-amount">${formatPrice(price)}€</span>
+                    </div>
+                    <button class="soltour-btn soltour-btn-primary" id="btn-request-quote"
+                            style="padding: 20px 35px !important; border-radius: 100px !important; background: #019CB8 !important; color: #fff !important; border: none !important; font-size: 16px !important; font-weight: 700 !important; width: 100% !important;">
+                        Pedir cotação deste pacote
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Inicializa o slider de imagens
+     */
+    function initializeImageSlider() {
+        const $slider = $('.package-slider');
+        if ($slider.length === 0) return;
+
+        let currentIndex = 0;
+        const $images = $slider.find('.slider-image');
+        const $dots = $slider.find('.slider-dot');
+        const totalImages = $images.length;
+
+        function goToSlide(index) {
+            currentIndex = index;
+            $images.removeClass('active').eq(index).addClass('active');
+            $dots.removeClass('active').eq(index).addClass('active');
+        }
+
+        $slider.find('.slider-next').on('click', function(e) {
+            e.stopPropagation();
+            goToSlide((currentIndex + 1) % totalImages);
+        });
+
+        $slider.find('.slider-prev').on('click', function(e) {
+            e.stopPropagation();
+            goToSlide((currentIndex - 1 + totalImages) % totalImages);
+        });
+
+        $dots.on('click', function(e) {
+            e.stopPropagation();
+            goToSlide(parseInt($(this).data('index')));
         });
     }
 
     /**
-     * Busca detalhes adicionais do hotel via AJAX
+     * Busca detalhes adicionais do hotel e enriquece a página
      */
-    function fetchPackageDetails($container, packageData) {
-        if (!packageData.availToken || !packageData.budgetId || !packageData.hotelCode || !packageData.providerCode) {
-            console.warn('Dados incompletos para buscar detalhes do hotel');
-            return;
-        }
+    function fetchAndEnrichHotelDetails($container, packageData) {
+        console.log('📡 [DETAILS] Buscando detalhes do hotel via AJAX...');
+        console.log('📡 [DETAILS] Parâmetros:', {
+            availToken: packageData.availToken,
+            budgetId: packageData.budgetId,
+            hotelCode: packageData.hotelCode,
+            providerCode: packageData.providerCode
+        });
 
         $.ajax({
             url: soltourData.ajaxurl,
@@ -248,78 +327,93 @@
                 provider_code: packageData.providerCode
             },
             success: function(response) {
+                console.log('✅ [DETAILS] Resposta do hotel/details:', response);
+
                 if (!response.success) {
-                    console.warn('Erro ao buscar detalhes:', response);
-                    // Manter mensagens genéricas se falhar
+                    console.warn('⚠️ [DETAILS] API retornou erro:', response);
+                    $('#details-extra-info').html('<p style="color: #999;">Detalhes adicionais não disponíveis.</p>');
                     return;
                 }
 
                 const data = response.data || {};
                 const details = data.details || data.hotelDetails || data;
 
-                // Atualizar descrição longa
+                console.log('📋 [DETAILS] Detalhes parseados:', details);
+
+                // Enriquecer a seção de informações extras
+                let extraInfoHTML = '';
+
                 if (details.description || details.longDescription) {
-                    const description = details.longDescription || details.description;
-                    $container.find('.bt-hotel-description-body').html(`
-                        <p>${description}</p>
-                    `);
-                } else {
-                    $container.find('.bt-hotel-description-body').html(`
-                        <p>Descrição não disponível no momento.</p>
-                    `);
+                    extraInfoHTML += `
+                        <div style="margin-bottom: 15px;">
+                            <strong>Sobre o hotel:</strong>
+                            <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">
+                                ${(details.longDescription || details.description).substring(0, 200)}...
+                            </p>
+                        </div>
+                    `;
                 }
 
-                // Atualizar serviços/comodidades
                 if (details.facilities && Array.isArray(details.facilities) && details.facilities.length > 0) {
-                    const items = details.facilities.map(f => `<li>${f}</li>`).join('');
-                    $container.find('.bt-hotel-services-body').html(`
-                        <ul class="bt-facilities-list">${items}</ul>
-                    `);
-                } else if (details.services && Array.isArray(details.services) && details.services.length > 0) {
-                    const items = details.services.map(s => `<li>${s}</li>`).join('');
-                    $container.find('.bt-hotel-services-body').html(`
-                        <ul class="bt-facilities-list">${items}</ul>
-                    `);
-                } else {
-                    $container.find('.bt-hotel-services-body').html(`
-                        <p>Serviços não disponíveis no momento.</p>
-                    `);
+                    extraInfoHTML += `
+                        <div style="margin-bottom: 15px;">
+                            <strong>Serviços:</strong>
+                            <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">
+                                ${details.facilities.slice(0, 3).join(', ')}...
+                            </p>
+                        </div>
+                    `;
                 }
 
-                // Atualizar localização
-                const addressParts = [];
-                if (details.address) addressParts.push(details.address);
-                if (details.postalCode && details.city) {
-                    addressParts.push(`${details.postalCode} ${details.city}`);
-                } else if (details.city) {
-                    addressParts.push(details.city);
-                }
-                if (details.country) addressParts.push(details.country);
-
-                if (addressParts.length > 0) {
-                    const locationHTML = addressParts.map(part => `<p>${part}</p>`).join('');
-                    $container.find('.bt-hotel-location-body').html(locationHTML);
+                if (extraInfoHTML) {
+                    $('#details-extra-info').html(extraInfoHTML);
                 } else {
-                    $container.find('.bt-hotel-location-body').html(`
-                        <p>Localização não disponível no momento.</p>
-                    `);
+                    $('#details-extra-info').html('<p style="color: #999;">Detalhes adicionais não disponíveis.</p>');
                 }
             },
             error: function(xhr, status, error) {
-                console.error('Erro AJAX ao buscar detalhes:', error);
-                // Manter mensagens genéricas se houver erro
+                console.error('❌ [DETAILS] Erro AJAX:', error);
+                console.error('❌ [DETAILS] Response:', xhr.responseText);
+                $('#details-extra-info').html('<p style="color: #999;">Erro ao carregar detalhes.</p>');
+            }
+        });
+
+        // Configurar botão de cotação
+        setupQuoteButton(packageData);
+    }
+
+    /**
+     * Configura o botão de pedir cotação
+     */
+    function setupQuoteButton(packageData) {
+        console.log('🔧 [DETAILS] Configurando botão de cotação...');
+
+        $('#btn-request-quote').on('click', function() {
+            console.log('🎯 [DETAILS] Botão "Pedir cotação" clicado');
+            console.log('📦 [DETAILS] Dados para cotação:', packageData);
+
+            // Usar o mesmo fluxo da página de resultados
+            // Chamar SoltourApp.selectPackage()
+            if (window.SoltourApp && window.SoltourApp.selectPackage) {
+                console.log('✅ [DETAILS] Chamando SoltourApp.selectPackage()');
+                window.SoltourApp.selectPackage(
+                    packageData.budgetId,
+                    packageData.hotelCode,
+                    packageData.providerCode
+                );
+            } else {
+                console.error('❌ [DETAILS] SoltourApp.selectPackage() não encontrado');
+                alert('Erro: não foi possível iniciar a cotação. Por favor, tente novamente.');
             }
         });
     }
 
     /**
-     * Formata data DD/MM/YYYY
+     * Formata preço (igual ao soltour-booking.js)
      */
-    function formatDate(dateStr) {
-        if (!dateStr) return '';
-        const parts = dateStr.split('-');
-        if (parts.length !== 3) return dateStr;
-        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    function formatPrice(price, decimals = 0) {
+        const fixed = Number(price).toFixed(decimals);
+        return fixed.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     }
 
     // Inicializar quando o DOM estiver pronto
