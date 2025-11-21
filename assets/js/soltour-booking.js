@@ -2137,7 +2137,7 @@
                         <span class="price-total-label">Preço total</span>
                         <span class="price-total-amount">${formatPrice(price)}€</span>
                     </div>
-                    <div style="display: flex; gap: 10px; width: 100%;">
+                    <div class="package-card-buttons">
                         <button class="soltour-btn soltour-btn-secondary"
                                 style="padding: 18px 25px !important; border-radius: 100px !important; background: #fff !important; color: #019CB8 !important; border: 2px solid #019CB8 !important; font-size: 15px !important; font-weight: 700 !important; flex: 1 !important; transition: all 0.3s !important;"
                                 onmouseover="this.style.background='#f0f9fa'"
