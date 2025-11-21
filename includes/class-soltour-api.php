@@ -499,33 +499,17 @@ class Soltour_API {
             'sslverify' => true
         );
 
-        // DEBUG AVANÇADO - LOG COMPLETO DA REQUISIÇÃO
-        $this->log("═══════════════════════════════════════════════════");
-        $this->log("📤 REQUEST to: {$endpoint}");
-        $this->log("📍 URL: {$url}");
-        $this->log("🔑 Headers: " . json_encode($headers, JSON_PRETTY_PRINT));
-        $this->log("📦 Body: " . json_encode($data, JSON_PRETTY_PRINT));
-        $this->log("═══════════════════════════════════════════════════");
-
         $response = wp_remote_post($url, $args);
 
         if (is_wp_error($response)) {
             $error_msg = $response->get_error_message();
-            $this->log("❌ ERROR in {$endpoint}: {$error_msg}", 'error');
-            $this->log("═══════════════════════════════════════════════════");
+            $this->log("ERROR in {$endpoint}: {$error_msg}", 'error');
             return array('error' => $error_msg);
         }
 
         $http_code = wp_remote_retrieve_response_code($response);
         $body = wp_remote_retrieve_body($response);
         $decoded = json_decode($body, true);
-
-        // DEBUG AVANÇADO - LOG COMPLETO DA RESPOSTA
-        $this->log("📥 RESPONSE from: {$endpoint}");
-        $this->log("📊 HTTP Code: {$http_code}");
-        $this->log("📄 Body (full): " . $body);
-        $this->log("🔍 Decoded: " . json_encode($decoded, JSON_PRETTY_PRINT));
-        $this->log("═══════════════════════════════════════════════════");
 
         return $decoded;
     }
@@ -815,9 +799,6 @@ class Soltour_API {
     public function ajax_prepare_quote() {
         check_ajax_referer('soltour_booking_nonce', 'nonce');
 
-        $this->log('╔═══════════════════════════════════════════════════════════════════╗');
-        $this->log('║      🎯 SOLTOUR - PREPARE QUOTE - VALIDAÇÃO INTERMEDIÁRIA        ║');
-        $this->log('╚═══════════════════════════════════════════════════════════════════╝');
 
         // Validar e sanitizar inputs
         // IMPORTANTE: Não usar sanitize_text_field() no budgetId pois pode alterar caracteres especiais (##, $, @@)
@@ -826,16 +807,8 @@ class Soltour_API {
         $hotel_code = isset($_POST['hotel_code']) ? sanitize_text_field($_POST['hotel_code']) : '';
         $provider_code = isset($_POST['provider_code']) ? sanitize_text_field($_POST['provider_code']) : '';
 
-        $this->log('📥 DADOS RECEBIDOS DO FRONTEND:');
-        $this->log('  ├─ availToken: ' . ($avail_token ? substr($avail_token, 0, 20) . '...' : 'NÃO FORNECIDO'));
-        $this->log('  ├─ budgetId (RAW): ' . ($budget_id ?: 'NÃO FORNECIDO'));
-        $this->log('  ├─ budgetId (strlen): ' . strlen($budget_id));
-        $this->log('  ├─ hotelCode: ' . ($hotel_code ?: 'NÃO FORNECIDO'));
-        $this->log('  └─ providerCode: ' . ($provider_code ?: 'NÃO FORNECIDO'));
-
         // Validar dados obrigatórios
         if (empty($avail_token) || empty($budget_id)) {
-            $this->log('❌ ERRO: Dados obrigatórios ausentes', 'error');
             wp_send_json_error(array(
                 'message' => 'Dados incompletos. Por favor, tente novamente.',
                 'debug' => array(
@@ -852,14 +825,10 @@ class Soltour_API {
         // mesmo quando o budget existia. Conforme doc, quote é suficiente.
         // ========================================
         $this->log('');
-        $this->log('🎫 Gerando cotação oficial com /booking/quote...');
-        $this->log('  └─ Endpoint: POST /booking/quote');
-        $this->log('  └─ budgetIds: [' . $budget_id . ']');
 
         // Chamar diretamente /booking/quote
         $quote_response = $this->quote_package($avail_token, array($budget_id));
 
-        $this->log('📋 RESPOSTA quote:');
         $this->log('  ├─ budget: ' . (isset($quote_response['budget']) ? 'SIM ✅' : 'NÃO ❌'));
         $this->log('  ├─ quoteToken: ' . (isset($quote_response['quoteToken']) ? substr($quote_response['quoteToken'], 0, 20) . '... ✅' : 'NÃO ❌'));
         $this->log('  ├─ insurances: ' . (isset($quote_response['insurances']) ? count($quote_response['insurances']) : '0'));
@@ -880,7 +849,6 @@ class Soltour_API {
         if (!is_array($quote_response)) {
             $this->log('');
             $this->log('❌ ERRO: Resposta do quote inválida (não é array)');
-            $this->log('╚═══════════════════════════════════════════════════════════════════╝');
 
             wp_send_json_error(array(
                 'message' => 'Erro ao gerar cotação. Por favor, tente novamente.',
@@ -897,9 +865,6 @@ class Soltour_API {
                 : 'Erro desconhecido ao gerar cotação';
 
             $this->log('');
-            $this->log('❌ ERRO: Quote retornou result.ok = false');
-            $this->log('  └─ Erro: ' . $error_message);
-            $this->log('╚═══════════════════════════════════════════════════════════════════╝');
 
             wp_send_json_error(array(
                 'message' => 'Este pacote não está mais disponível. Por favor, selecione outro.',
@@ -912,8 +877,6 @@ class Soltour_API {
         // Verificar se tem budget
         if (!isset($quote_response['budget'])) {
             $this->log('');
-            $this->log('❌ ERRO: Quote não retornou budget');
-            $this->log('╚═══════════════════════════════════════════════════════════════════╝');
 
             wp_send_json_error(array(
                 'message' => 'Erro ao gerar cotação. Por favor, tente novamente.',
@@ -927,12 +890,6 @@ class Soltour_API {
         // SUCESSO: Retornar dados completos para o frontend
         // ========================================
         $this->log('');
-        $this->log('✅ SUCESSO! Cotação gerada com sucesso');
-        $this->log('📤 RETORNANDO DADOS PARA FRONTEND:');
-        $this->log('  ├─ quote: COMPLETO');
-        $this->log('  ├─ quoteToken: GERADO');
-        $this->log('  └─ budget: VÁLIDO');
-        $this->log('╚═══════════════════════════════════════════════════════════════════╝');
 
         wp_send_json_success(array(
             'message' => 'Pacote validado com sucesso!',

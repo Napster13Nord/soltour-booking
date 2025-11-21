@@ -38,13 +38,11 @@
         const $container = $('#soltour-package-details-page');
         if ($container.length === 0) return;
 
-        console.log('🔍 [DETAILS] Inicializando página de detalhes...');
 
         // Buscar dados do sessionStorage
         const stored = sessionStorage.getItem('soltour_selected_package_details');
 
         if (!stored) {
-            console.error('❌ [DETAILS] Dados não encontrados no sessionStorage');
             showError($container);
             return;
         }
@@ -52,16 +50,13 @@
         let packageData;
         try {
             packageData = JSON.parse(stored);
-            console.log('✅ [DETAILS] Dados carregados:', packageData);
         } catch (e) {
-            console.error('❌ [DETAILS] Erro ao fazer parse:', e);
             showError($container);
             return;
         }
 
         // Validar dados essenciais
         if (!packageData.budget || !packageData.hotelInfo) {
-            console.error('❌ [DETAILS] Dados incompletos:', packageData);
             showError($container);
             return;
         }
@@ -87,7 +82,6 @@
      * Renderiza os detalhes do pacote
      */
     function renderPackageDetails($container, packageData) {
-        console.log('🎨 [DETAILS] Renderizando detalhes...');
 
         const budget = packageData.budget;
         const hotelInfo = packageData.hotelInfo;
@@ -101,7 +95,6 @@
             hotelImages = hotelInfo.multimedias.map(img => img.url).slice(0, 10);
         }
 
-        console.log('📸 [DETAILS] Imagens encontradas:', hotelImages.length);
 
         // País e Cidade
         const destinationCode = hotelInfo.destinationCode || '';
@@ -147,7 +140,6 @@
         const numPax = budget.numPax || 2;
         const pricePerPerson = numPax > 0 ? (price / numPax) : price;
 
-        console.log('💰 [DETAILS] Preços:', { price, numPax, pricePerPerson });
 
         // CARROSSEL (mesma estrutura dos resultados)
         let sliderHTML = '';
@@ -295,10 +287,8 @@
      * Usa o mesmo fluxo do botão "Selecionar" dos resultados
      */
     function setupQuoteButton(packageData) {
-        console.log('🔧 [DETAILS] Configurando botão de cotação...');
 
         $('#btn-request-quote').on('click', function() {
-            console.log('🎯 [DETAILS] Botão "Pedir cotação" clicado');
 
             // Antes de chamar selectPackage, precisamos garantir que os dados estão em SoltourApp
             // para que o fluxo de validação funcione corretamente
@@ -355,7 +345,6 @@
             window.SoltourApp.searchParams = packageData.searchParams;
             window.SoltourApp.numRoomsSearched = packageData.numRoomsSearched || 1;
 
-            console.log('✅ [DETAILS] Dados preparados, chamando SoltourApp.selectPackage()');
 
             // Agora chamar a função global que faz o fluxo completo:
             // 1. Mostra modal "Verificando disponibilidade"
@@ -371,7 +360,6 @@
                     packageData.providerCode
                 );
             } else {
-                console.error('❌ [DETAILS] SoltourApp.selectPackage não está disponível');
                 alert('Erro ao processar cotação. Por favor, volte aos resultados e tente novamente.');
             }
         });

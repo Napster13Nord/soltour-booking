@@ -334,7 +334,7 @@ h4.rooms-title {
     }
 
     .room-option {
-        padding: 12px 14px !important;
+        padding: 0 !important;
     }
 
     .room-name {
