@@ -1,6 +1,6 @@
 /**
  * Página de Detalhes do Pacote - BeautyTravel
- * Layout: Carrossel ESQUERDA + Informações DIREITA
+ * Usa MESMA estrutura da página de resultados
  */
 
 (function($) {
@@ -45,24 +45,24 @@
 
         if (!stored) {
             console.error('❌ [DETAILS] Dados não encontrados no sessionStorage');
-            showError($container, 'Pacote não encontrado', 'Por favor, volte à página de resultados e selecione um pacote novamente.');
+            showError($container);
             return;
         }
 
         let packageData;
         try {
             packageData = JSON.parse(stored);
-            console.log('✅ [DETAILS] Dados carregados do sessionStorage:', packageData);
+            console.log('✅ [DETAILS] Dados carregados:', packageData);
         } catch (e) {
-            console.error('❌ [DETAILS] Erro ao fazer parse dos dados:', e);
-            showError($container, 'Erro ao carregar os dados', 'Os dados do pacote estão corrompidos. Volte aos resultados e tente novamente.');
+            console.error('❌ [DETAILS] Erro ao fazer parse:', e);
+            showError($container);
             return;
         }
 
         // Validar dados essenciais
         if (!packageData.budget || !packageData.hotelInfo) {
             console.error('❌ [DETAILS] Dados incompletos:', packageData);
-            showError($container, 'Dados incompletos', 'Por favor, volte aos resultados e selecione o pacote novamente.');
+            showError($container);
             return;
         }
 
@@ -73,36 +73,34 @@
     /**
      * Mostra mensagem de erro
      */
-    function showError($container, title, message) {
+    function showError($container) {
         $container.html(`
             <div class="bt-quote-error">
-                <h3>${title}</h3>
-                <p>${message}</p>
-                <button class="bt-back-button" onclick="window.history.back()">
-                    ← Voltar aos resultados
-                </button>
+                <h3>Pacote não encontrado</h3>
+                <p>Por favor, volte à página de resultados e selecione um pacote novamente.</p>
+                <button class="bt-back-button" onclick="window.history.back()">← Voltar aos resultados</button>
             </div>
         `);
     }
 
     /**
-     * Renderiza os detalhes do pacote - LAYOUT ESPECÍFICO
+     * Renderiza os detalhes do pacote
      */
     function renderPackageDetails($container, packageData) {
-        console.log('🎨 [DETAILS] Renderizando página de detalhes...');
+        console.log('🎨 [DETAILS] Renderizando detalhes...');
 
         const budget = packageData.budget;
         const hotelInfo = packageData.hotelInfo;
         const hotelService = budget.hotelServices && budget.hotelServices[0];
         const searchParams = packageData.searchParams || {};
 
-        // EXTRAIR DADOS
-
-        // Imagens
+        // EXTRAIR IMAGENS (mesma lógica dos resultados)
         let hotelImages = [];
         if (hotelInfo && hotelInfo.images) {
             hotelImages = hotelInfo.images.map(img => img.url).slice(0, 10);
         }
+
+        console.log('📸 [DETAILS] Imagens encontradas:', hotelImages.length);
 
         // País e Cidade
         const destinationCode = hotelInfo.destinationCode || '';
@@ -130,12 +128,13 @@
             numNights = Math.round((end - start) / (1000 * 60 * 60 * 24));
         }
 
-        // Datas
+        // Datas formatadas
         let datesText = '';
         if (hotelService && hotelService.startDate && hotelService.endDate) {
             const startDate = new Date(hotelService.startDate);
             const endDate = new Date(hotelService.endDate);
-            datesText = formatDatePT(startDate) + ' - ' + formatDatePT(endDate);
+            const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+            datesText = `${startDate.getDate()} ${months[startDate.getMonth()]} ${startDate.getFullYear()} - ${endDate.getDate()} ${months[endDate.getMonth()]} ${endDate.getFullYear()}`;
         }
 
         // Regime alimentar
@@ -147,7 +146,38 @@
         const numPax = budget.numPax || 2;
         const pricePerPerson = numPax > 0 ? (price / numPax) : price;
 
-        // RENDERIZAR LAYOUT
+        console.log('💰 [DETAILS] Preços:', { price, numPax, pricePerPerson });
+
+        // CARROSSEL (mesma estrutura dos resultados)
+        let sliderHTML = '';
+        if (hotelImages.length > 0) {
+            sliderHTML = `
+                <div class="package-image-slider">
+                    <div class="slider-images">
+                        ${hotelImages.map((img, index) => `
+                            <img src="${img}" alt="${hotelName}" class="slider-image ${index === 0 ? 'active' : ''}" />
+                        `).join('')}
+                    </div>
+                    ${hotelImages.length > 1 ? `
+                        <button class="slider-btn slider-prev" onclick="SoltourApp.changeSlide(this, -1)">❮</button>
+                        <button class="slider-btn slider-next" onclick="SoltourApp.changeSlide(this, 1)">❯</button>
+                        <div class="slider-dots">
+                            ${hotelImages.map((_, index) => `
+                                <span class="slider-dot ${index === 0 ? 'active' : ''}" onclick="SoltourApp.goToSlide(this, ${index})"></span>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        } else {
+            sliderHTML = `
+                <div class="package-image">
+                    <div class="no-image">📷 Sem imagem</div>
+                </div>
+            `;
+        }
+
+        // RENDERIZAR LAYOUT (2 colunas: carrossel esquerda + info direita)
         $container.html(`
             <button class="bt-back-button" onclick="window.history.back()" style="margin-bottom: 20px;">
                 ← Voltar aos resultados
@@ -156,9 +186,7 @@
             <div class="package-details-layout">
                 <!-- ESQUERDA: Carrossel -->
                 <div class="package-details-left">
-                    <div class="package-details-carousel" id="details-carousel">
-                        ${renderCarousel(hotelImages)}
-                    </div>
+                    ${sliderHTML}
                 </div>
 
                 <!-- DIREITA: Informações -->
@@ -191,7 +219,7 @@
                                 <span class="info-icon">🍽️</span>
                                 <div>
                                     <span class="info-label">Regime</span>
-                                    <span class="info-value">${mealPlan}</span>
+                                    <span class="info-value">${mealPlan || 'Consultar'}</span>
                                 </div>
                             </div>
                             <div class="info-item">
@@ -233,74 +261,11 @@
             </div>
         `);
 
-        // Inicializar carrossel
-        initializeCarousel();
-
         // Buscar detalhes do hotel e enriquecer
         fetchAndEnrichHotelDetails(packageData);
 
         // Configurar botão de cotação
         setupQuoteButton(packageData);
-    }
-
-    /**
-     * Renderiza o carrossel de imagens
-     */
-    function renderCarousel(images) {
-        if (!images || images.length === 0) {
-            return '<div class="no-images">Sem imagens disponíveis</div>';
-        }
-
-        let html = '<div class="carousel-images">';
-        images.forEach((img, idx) => {
-            html += `<div class="carousel-image ${idx === 0 ? 'active' : ''}" style="background-image: url('${img}')"></div>`;
-        });
-        html += '</div>';
-
-        if (images.length > 1) {
-            html += '<button class="carousel-btn carousel-prev">‹</button>';
-            html += '<button class="carousel-btn carousel-next">›</button>';
-            html += '<div class="carousel-dots">';
-            images.forEach((_, idx) => {
-                html += `<span class="carousel-dot ${idx === 0 ? 'active' : ''}" data-index="${idx}"></span>`;
-            });
-            html += '</div>';
-        }
-
-        return html;
-    }
-
-    /**
-     * Inicializa o carrossel
-     */
-    function initializeCarousel() {
-        const $carousel = $('#details-carousel');
-        if ($carousel.length === 0) return;
-
-        let currentIndex = 0;
-        const $images = $carousel.find('.carousel-image');
-        const $dots = $carousel.find('.carousel-dot');
-        const totalImages = $images.length;
-
-        if (totalImages <= 1) return;
-
-        function goToSlide(index) {
-            currentIndex = index;
-            $images.removeClass('active').eq(index).addClass('active');
-            $dots.removeClass('active').eq(index).addClass('active');
-        }
-
-        $carousel.find('.carousel-next').on('click', function() {
-            goToSlide((currentIndex + 1) % totalImages);
-        });
-
-        $carousel.find('.carousel-prev').on('click', function() {
-            goToSlide((currentIndex - 1 + totalImages) % totalImages);
-        });
-
-        $dots.on('click', function() {
-            goToSlide(parseInt($(this).data('index')));
-        });
     }
 
     /**
@@ -340,16 +305,29 @@
                         <h3>Sobre o hotel</h3>
                         <p>${hotel.description}</p>
                     `);
+                } else {
+                    $('#package-description').html(`
+                        <h3>Sobre o hotel</h3>
+                        <p>Resort de alto padrão com excelente infraestrutura e localização privilegiada.</p>
+                    `);
                 }
 
-                // Atualizar serviços (não disponíveis na API, manter genérico)
+                // Atualizar serviços
                 $('#package-services').html(`
                     <h3>Serviços e Comodidades</h3>
-                    <p>Resort 5 estrelas com piscinas, restaurantes, bar, Wi-Fi e entretenimento.</p>
+                    <p>Resort 5 estrelas com piscinas, restaurantes, bar, Wi-Fi, entretenimento e atividades.</p>
                 `);
             },
             error: function(xhr, status, error) {
                 console.error('❌ [DETAILS] Erro AJAX:', error);
+                $('#package-description').html(`
+                    <h3>Sobre o hotel</h3>
+                    <p>Resort de alto padrão com excelente infraestrutura.</p>
+                `);
+                $('#package-services').html(`
+                    <h3>Serviços e Comodidades</h3>
+                    <p>Resort completo com todas as comodidades.</p>
+                `);
             }
         });
     }
@@ -362,9 +340,8 @@
 
         $('#btn-request-quote').on('click', function() {
             console.log('🎯 [DETAILS] Botão "Pedir cotação" clicado');
-            console.log('📦 [DETAILS] PackageData completo:', packageData);
 
-            // Preparar dados COMPLETOS para cotação (mesmo formato que a página de resultados)
+            // Preparar dados COMPLETOS
             const quoteData = {
                 budgetId: packageData.budgetId,
                 hotelCode: packageData.hotelCode,
@@ -379,12 +356,12 @@
                 searchParams: packageData.searchParams || {}
             };
 
-            console.log('💾 [DETAILS] Salvando dados para cotação:', quoteData);
+            console.log('💾 [DETAILS] Salvando dados:', quoteData);
 
-            // Salvar no sessionStorage (MESMA chave que o fluxo normal)
+            // Salvar dados
             sessionStorage.setItem('soltour_selected_package', JSON.stringify(quoteData));
 
-            // Também salvar em allUniqueHotels caso o quote-page.js precise
+            // Preparar dados completos para o fluxo de cotação
             const hotelsArray = [{
                 budget: packageData.budget,
                 hotelCode: packageData.hotelCode,
@@ -392,7 +369,6 @@
                 details: {}
             }];
 
-            // Preparar objeto completo para o fluxo de cotação
             const resultsData = {
                 availToken: packageData.availToken,
                 allUniqueHotels: hotelsArray,
@@ -402,19 +378,17 @@
                 numRoomsSearched: packageData.numRoomsSearched || 1
             };
 
-            // Adicionar hotel ao mapa
             resultsData.hotelsFromAvailability[packageData.hotelCode] = packageData.hotelInfo;
 
-            // Adicionar voo se existir
             if (packageData.flightData) {
                 resultsData.flightsFromAvailability[packageData.flightData.id || '100'] = packageData.flightData;
             }
 
             sessionStorage.setItem('soltour_search_results', JSON.stringify(resultsData));
 
-            console.log('✅ [DETAILS] Dados salvos, redirecionando para cotação...');
+            console.log('✅ [DETAILS] Redirecionando para cotação...');
 
-            // Redirecionar para página de cotação
+            // Redirecionar
             window.location.href = '/cotacao/?budget=' + encodeURIComponent(packageData.budgetId);
         });
     }
@@ -425,14 +399,6 @@
     function formatPrice(price, decimals = 0) {
         const fixed = Number(price).toFixed(decimals);
         return fixed.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    }
-
-    /**
-     * Formata data em português
-     */
-    function formatDatePT(date) {
-        const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-        return date.getDate() + ' ' + months[date.getMonth()] + ' ' + date.getFullYear();
     }
 
     // Inicializar quando o DOM estiver pronto

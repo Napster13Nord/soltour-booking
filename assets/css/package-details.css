@@ -1,6 +1,6 @@
 /**
  * Página de Detalhes do Pacote - BeautyTravel
- * Layout: Carrossel ESQUERDA + Informações DIREITA
+ * Usa mesmas classes do slider dos resultados + layout 2 colunas
  */
 
 /* Container principal */
@@ -25,7 +25,6 @@
     font-weight: 600 !important;
     cursor: pointer !important;
     transition: all 0.3s ease !important;
-    margin-bottom: 20px !important;
 }
 
 .bt-back-button:hover {
@@ -49,7 +48,7 @@
 }
 
 /* ==================================
-   ESQUERDA: CARROSSEL
+   ESQUERDA: CARROSSEL (mesmas classes dos resultados)
    ================================== */
 
 .package-details-left {
@@ -57,7 +56,8 @@
     top: 20px !important;
 }
 
-.package-details-carousel {
+/* Slider de imagens (MESMAS classes da página de resultados) */
+.package-details-left .package-image-slider {
     position: relative !important;
     width: 100% !important;
     height: 500px !important;
@@ -68,34 +68,33 @@
 }
 
 @media (max-width: 768px) {
-    .package-details-carousel {
+    .package-details-left .package-image-slider {
         height: 300px !important;
     }
 }
 
-.carousel-images {
+.package-details-left .slider-images {
     position: relative !important;
     width: 100% !important;
     height: 100% !important;
 }
 
-.carousel-image {
+.package-details-left .slider-image {
     position: absolute !important;
     top: 0 !important;
     left: 0 !important;
     width: 100% !important;
     height: 100% !important;
-    background-size: cover !important;
-    background-position: center !important;
+    object-fit: cover !important;
     opacity: 0 !important;
     transition: opacity 0.5s ease !important;
 }
 
-.carousel-image.active {
+.package-details-left .slider-image.active {
     opacity: 1 !important;
 }
 
-.carousel-btn {
+.package-details-left .slider-btn {
     position: absolute !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
@@ -104,29 +103,30 @@
     width: 50px !important;
     height: 50px !important;
     border-radius: 50% !important;
-    font-size: 30px !important;
+    font-size: 24px !important;
     cursor: pointer !important;
     z-index: 10 !important;
     transition: all 0.3s ease !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    color: #333 !important;
 }
 
-.carousel-btn:hover {
+.package-details-left .slider-btn:hover {
     background: rgba(255,255,255,1) !important;
     transform: translateY(-50%) scale(1.1) !important;
 }
 
-.carousel-prev {
+.package-details-left .slider-prev {
     left: 20px !important;
 }
 
-.carousel-next {
+.package-details-left .slider-next {
     right: 20px !important;
 }
 
-.carousel-dots {
+.package-details-left .slider-dots {
     position: absolute !important;
     bottom: 20px !important;
     left: 50% !important;
@@ -136,7 +136,7 @@
     z-index: 10 !important;
 }
 
-.carousel-dot {
+.package-details-left .slider-dot {
     width: 12px !important;
     height: 12px !important;
     border-radius: 50% !important;
@@ -145,10 +145,25 @@
     transition: all 0.3s ease !important;
 }
 
-.carousel-dot.active {
+.package-details-left .slider-dot.active,
+.package-details-left .slider-dot:hover {
     background: #019CB8 !important;
-    width: 30px !important;
-    border-radius: 6px !important;
+}
+
+/* Sem imagem */
+.package-details-left .package-image {
+    width: 100% !important;
+    height: 500px !important;
+    background: #f0f0f0 !important;
+    border-radius: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.package-details-left .no-image {
+    font-size: 24px !important;
+    color: #999 !important;
 }
 
 /* ==================================
