@@ -287,6 +287,46 @@ class Soltour_Shortcodes {
                 <p><?php _e('Aguarde enquanto buscamos todas as informações do seu pacote.', 'soltour-booking'); ?></p>
             </div>
         </div>
+
+        <!-- Modal de Carregamento (mesmo modal da página de resultados) -->
+        <div class="soltour-loading-modal-overlay" id="soltour-loading-modal">
+            <div class="soltour-loading-modal">
+                <!-- Logo Beauty Travel -->
+                <img src="<?php echo SOLTOUR_PLUGIN_URL; ?>assets/images/branding/beauty-travel-logo.webp"
+                     alt="Beauty Travel"
+                     class="loading-logo" />
+
+                <!-- Animação Lottie -->
+                <lottie-player
+                    class="loading-animation"
+                    src="<?php echo SOLTOUR_PLUGIN_URL; ?>assets/images/loading-animation.json"
+                    background="transparent"
+                    speed="1"
+                    loop
+                    autoplay>
+                </lottie-player>
+
+                <!-- Título (será preenchido dinamicamente) -->
+                <h2 class="loading-title" id="loading-modal-title">
+                    <?php _e('Verificando disponibilidade...', 'soltour-booking'); ?>
+                </h2>
+
+                <!-- Mensagem -->
+                <p class="loading-message" id="loading-modal-message">
+                    <?php _e('Por favor, aguarde', 'soltour-booking'); ?>
+                </p>
+
+                <!-- Barra de Progresso -->
+                <div class="progress-container">
+                    <div class="progress-bar"></div>
+                </div>
+
+                <!-- Mensagem de tempo de espera -->
+                <p class="loading-time-info" style="display: none; color: #6b7280; font-size: 14px; margin-top: 20px; margin-bottom: 0;">
+                    <?php _e('O processo pode demorar entre 30 e 45 segundos, aguarde', 'soltour-booking'); ?>
+                </p>
+            </div>
+        </div>
         <?php
         return ob_get_clean();
     }
