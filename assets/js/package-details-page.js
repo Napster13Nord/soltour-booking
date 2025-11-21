@@ -93,6 +93,7 @@
         const hotelInfo = packageData.hotelInfo;
         const hotelService = budget.hotelServices && budget.hotelServices[0];
         const searchParams = packageData.searchParams || {};
+        const selectedRoom = packageData.selectedRoom || {};
 
         // EXTRAIR IMAGENS (mesma lógica dos resultados)
         let hotelImages = [];
@@ -202,6 +203,20 @@
                     <div class="package-details-info">
                         <div class="info-grid">
                             <div class="info-item">
+                                <span class="info-icon">🏨</span>
+                                <div>
+                                    <span class="info-label">Categoria</span>
+                                    <span class="info-value">${hotelInfo.categoryDescription || hotelStars + ' Estrelas'}</span>
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-icon">📍</span>
+                                <div>
+                                    <span class="info-label">Endereço</span>
+                                    <span class="info-value">${hotelInfo.address || city}</span>
+                                </div>
+                            </div>
+                            <div class="info-item">
                                 <span class="info-icon">🛫</span>
                                 <div>
                                     <span class="info-label">Origem</span>
@@ -229,17 +244,26 @@
                                     <span class="info-value">${datesText}</span>
                                 </div>
                             </div>
+                            <div class="info-item">
+                                <span class="info-icon">🛏️</span>
+                                <div>
+                                    <span class="info-label">Tipo de Quarto</span>
+                                    <span class="info-value">${selectedRoom.description || 'Standard'}</span>
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-icon">👥</span>
+                                <div>
+                                    <span class="info-label">Hóspedes</span>
+                                    <span class="info-value">${budget.numPax || 2} pessoas</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="package-description" id="package-description">
+                    <div class="package-description">
                         <h3>Sobre o hotel</h3>
-                        <p style="color: #999;">Carregando descrição...</p>
-                    </div>
-
-                    <div class="package-services" id="package-services">
-                        <h3>Serviços e Comodidades</h3>
-                        <p style="color: #999;">Carregando serviços...</p>
+                        <p style="white-space: pre-line; line-height: 1.8;">${hotelInfo.description || 'Informação não disponível'}</p>
                     </div>
 
                     <div class="package-pricing">
@@ -261,76 +285,10 @@
             </div>
         `);
 
-        // Buscar detalhes do hotel e enriquecer
-        fetchAndEnrichHotelDetails(packageData);
-
         // Configurar botão de cotação
         setupQuoteButton(packageData);
     }
 
-    /**
-     * Busca detalhes do hotel e enriquece a página
-     */
-    function fetchAndEnrichHotelDetails(packageData) {
-        console.log('📡 [DETAILS] Buscando detalhes do hotel via AJAX...');
-
-        $.ajax({
-            url: soltourData.ajaxurl,
-            type: 'POST',
-            data: {
-                action: 'soltour_get_package_details',
-                nonce: soltourData.nonce,
-                avail_token: packageData.availToken,
-                budget_id: packageData.budgetId,
-                hotel_code: packageData.hotelCode,
-                provider_code: packageData.providerCode
-            },
-            success: function(response) {
-                console.log('✅ [DETAILS] Resposta do hotel/details:', response);
-
-                if (!response.success) {
-                    console.warn('⚠️ [DETAILS] API retornou erro');
-                    return;
-                }
-
-                const data = response.data || {};
-                const hotelDetails = data.hotelDetails || data.details || {};
-                const hotel = hotelDetails.hotel || {};
-
-                console.log('📋 [DETAILS] Hotel details:', hotel);
-
-                // Atualizar descrição
-                if (hotel.description) {
-                    $('#package-description').html(`
-                        <h3>Sobre o hotel</h3>
-                        <p>${hotel.description}</p>
-                    `);
-                } else {
-                    $('#package-description').html(`
-                        <h3>Sobre o hotel</h3>
-                        <p>Resort de alto padrão com excelente infraestrutura e localização privilegiada.</p>
-                    `);
-                }
-
-                // Atualizar serviços
-                $('#package-services').html(`
-                    <h3>Serviços e Comodidades</h3>
-                    <p>Resort 5 estrelas com piscinas, restaurantes, bar, Wi-Fi, entretenimento e atividades.</p>
-                `);
-            },
-            error: function(xhr, status, error) {
-                console.error('❌ [DETAILS] Erro AJAX:', error);
-                $('#package-description').html(`
-                    <h3>Sobre o hotel</h3>
-                    <p>Resort de alto padrão com excelente infraestrutura.</p>
-                `);
-                $('#package-services').html(`
-                    <h3>Serviços e Comodidades</h3>
-                    <p>Resort completo com todas as comodidades.</p>
-                `);
-            }
-        });
-    }
 
     /**
      * Configura o botão de pedir cotação
