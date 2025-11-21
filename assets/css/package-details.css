@@ -35,7 +35,7 @@
 /* Layout principal: GRID com 2 colunas */
 .package-details-layout {
     display: grid !important;
-    grid-template-columns: 55% 45% !important;
+    grid-template-columns: 45% 55% !important;
     gap: 40px !important;
     align-items: start !important;
 }
@@ -52,19 +52,18 @@
    ================================== */
 
 .package-details-left {
-    position: sticky !important;
-    top: 20px !important;
+    /* Sticky removido - não estava funcionando */
 }
 
 /* Slider de imagens (MESMAS classes da página de resultados) */
 .package-details-left .package-image-slider {
     position: relative !important;
     width: 100% !important;
-    height: 500px !important;
+    height: 320px !important;
     border-radius: 12px !important;
     overflow: hidden !important;
     background: #f0f0f0 !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    box-shadow: 0 4px 12px rgb(0 0 0 / .15) !important;
 }
 
 @media (max-width: 768px) {
@@ -376,6 +375,25 @@
     background: #f0f0f0 !important;
     transform: translateY(-2px) !important;
     box-shadow: 0 6px 16px rgba(0,0,0,0.2) !important;
+}
+
+/* Botão secundário - cor branca */
+.soltour-btn.soltour-btn-secondary {
+    background: #fff !important;
+    padding: 18px 25px !important;
+    border-radius: 100px !important;
+    color: #019CB8 !important;
+    border: 2px solid #019CB8 !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    flex: 1 !important;
+    transition: 0.3s !important;
+    cursor: pointer !important;
+}
+
+.soltour-btn.soltour-btn-secondary:hover {
+    background: #f8f9fa !important;
+    transform: translateY(-2px) !important;
 }
 
 /* Loading state */
