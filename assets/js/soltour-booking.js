@@ -2137,11 +2137,20 @@
                         <span class="price-total-label">Preço total</span>
                         <span class="price-total-amount">${formatPrice(price)}€</span>
                     </div>
-                    <button class="soltour-btn soltour-btn-primary"
-                            style="padding: 20px 35px !important; border-radius: 100px !important; background: #019CB8 !important; color: #fff !important; border: none !important; font-size: 16px !important; font-weight: 700 !important; width: 100% !important;"
-                            onclick="SoltourApp.selectPackage('${budget.budgetId}', '${hotelCode}', '${hotelService.providerCode || 'UNDEFINED'}')">
-                        Selecionar
-                    </button>
+                    <div style="display: flex; gap: 10px; width: 100%;">
+                        <button class="soltour-btn soltour-btn-secondary"
+                                style="padding: 18px 25px !important; border-radius: 100px !important; background: #fff !important; color: #019CB8 !important; border: 2px solid #019CB8 !important; font-size: 15px !important; font-weight: 700 !important; flex: 1 !important; transition: all 0.3s !important;"
+                                onmouseover="this.style.background='#f0f9fa'"
+                                onmouseout="this.style.background='#fff'"
+                                onclick="SoltourApp.openPackageDetails('${budget.budgetId}', '${hotelCode}', '${hotelService.providerCode || 'UNDEFINED'}')">
+                            Ver Detalhes
+                        </button>
+                        <button class="soltour-btn soltour-btn-primary"
+                                style="padding: 18px 25px !important; border-radius: 100px !important; background: #019CB8 !important; color: #fff !important; border: none !important; font-size: 15px !important; font-weight: 700 !important; flex: 1 !important;"
+                                onclick="SoltourApp.selectPackage('${budget.budgetId}', '${hotelCode}', '${hotelService.providerCode || 'UNDEFINED'}')">
+                            Selecionar
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -2269,6 +2278,57 @@
 
         // Verificar se venda está permitida ANTES de prosseguir
         checkAllowedSellingBeforeSelect(budgetId, hotelCode, providerCode);
+    };
+
+    /**
+     * Abre página de detalhes do pacote/hotel
+     * Usada ao clicar no card do hotel ou no botão "Ver Detalhes"
+     */
+    window.SoltourApp.openPackageDetails = function(budgetId, hotelCode, providerCode) {
+        // Encontrar o pacote completo na lista global
+        const fullPackage = SoltourApp.allUniqueHotels.find(pkg =>
+            pkg.budget && pkg.budget.budgetId === budgetId
+        );
+
+        if (!fullPackage) {
+            alert('Erro: não encontramos os dados deste pacote. Volte à lista e tente novamente.');
+            return;
+        }
+
+        // Informações básicas do availability
+        const hotelInfo = SoltourApp.hotelsFromAvailability[hotelCode] || null;
+
+        // Pegar primeiro voo disponível (se houver)
+        let flightData = null;
+        if (SoltourApp.flightsFromAvailability && Object.keys(SoltourApp.flightsFromAvailability).length > 0) {
+            const firstFlightId = Object.keys(SoltourApp.flightsFromAvailability)[0];
+            flightData = SoltourApp.flightsFromAvailability[firstFlightId] || null;
+        }
+
+        // Quartos pré-selecionados (se existirem)
+        const selectedRooms = SoltourApp.selectedRooms[budgetId] || [];
+        const maxRooms = SoltourApp.numRoomsSearched || 1;
+
+        // Objeto base de dados que a página de detalhes vai usar
+        const detailsData = {
+            budgetId: budgetId,
+            hotelCode: hotelCode,
+            providerCode: providerCode,
+            availToken: SoltourApp.availToken,
+            budget: fullPackage.budget,
+            hotelInfo: hotelInfo,
+            flightData: flightData,
+            selectedRooms: selectedRooms,
+            selectedRoom: selectedRooms[0] || null,
+            numRoomsSearched: maxRooms,
+            searchParams: SoltourApp.searchParams
+        };
+
+        // Guardar no sessionStorage (chave específica para detalhes)
+        sessionStorage.setItem('soltour_selected_package_details', JSON.stringify(detailsData));
+
+        // Redirecionar para página de detalhes
+        window.location.href = '/pacote-detalhes/?budget=' + encodeURIComponent(budgetId);
     };
 
     /**
