@@ -137,8 +137,36 @@
 
         // Preços
         const price = budget.priceBreakdown?.priceBreakdownDetails?.[0]?.priceInfo?.pvp || 0;
-        const numPax = budget.numPax || 2;
-        const pricePerPerson = numPax > 0 ? (price / numPax) : price;
+
+        // NÚMERO DE PASSAGEIROS - mesma lógica da página de resultados
+        let numPassengers = 0;
+        if (hotelService && hotelService.mealPlan && hotelService.mealPlan.combination && hotelService.mealPlan.combination.rooms) {
+            hotelService.mealPlan.combination.rooms.forEach(room => {
+                if (room.passengers) {
+                    numPassengers += room.passengers.length;
+                }
+            });
+        }
+        // Fallback: usar dados da busca original (searchParams.rooms)
+        if (numPassengers === 0 && searchParams && searchParams.rooms) {
+            try {
+                const rooms = typeof searchParams.rooms === 'string'
+                    ? JSON.parse(searchParams.rooms)
+                    : searchParams.rooms;
+
+                rooms.forEach(room => {
+                    if (room.passengers) {
+                        numPassengers += room.passengers.length;
+                    }
+                });
+            } catch (e) {
+            }
+        }
+        // Último fallback: garantir pelo menos 2 passageiros
+        if (numPassengers === 0) numPassengers = 2;
+
+        // PREÇO POR PESSOA
+        const pricePerPerson = price / numPassengers;
 
 
         // CARROSSEL (mesma estrutura dos resultados)
@@ -263,7 +291,7 @@
                                 <span class="info-icon">👥</span>
                                 <div>
                                     <span class="info-label">Hóspedes</span>
-                                    <span class="info-value">${budget.numPax || 2} pessoas</span>
+                                    <span class="info-value">${numPassengers} ${numPassengers === 1 ? 'pessoa' : 'pessoas'}</span>
                                 </div>
                             </div>
                         </div>
